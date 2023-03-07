@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { buffer } from 'rxjs';
 import { Fichier } from './fichier';
 import { UploadServiceService } from './upload-service.service';
 
@@ -8,19 +9,22 @@ import { UploadServiceService } from './upload-service.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'Ng_Upload';
   item : Fichier = {FileContent: '', FileType: "", Name: ""};
   formUpload : FormGroup;
   file ?: File;
   content ?: string | ArrayBuffer;
-
+  items:any;
   constructor (
     private readonly _uploadService: UploadServiceService
   ){
     this.formUpload = new FormGroup({
       NameFile : new FormControl("",[Validators.required]),
     });
+  }
+  ngOnInit(): void {
+    this.getFiles();
   }
   async OnUploadFile($event :any)
   {
@@ -30,27 +34,36 @@ export class AppComponent {
       "load",
       () => {
         if(reader.result != undefined)
-        this.item.FileContent = reader.result
+        this.item.Content = reader.result;
+        console.log("in charge");
+        console.log(this.item.Content);
       },
       false
     );
     if (this.file) {
-      reader.readAsText(this.file);
+      reader.readAsDataURL(this.file);
     }
-    this.item.FileContent = await this.content?.toString();
   }
   async save(){
     this.item.Name = this.formUpload.value.NameFile;
     this.item.FileType = this.file?.type ?? "No type";
-    console.log(this.item);
-    debugger;
-    let result = await this._uploadService.uploadFile(this.item);
+    this.item.FileContent = this.file?.type ?? "No type";
 
-    console.log(result);
+    let result = await this._uploadService.uploadFile(this.item);
     result.subscribe((data : any) => {
       console.log(data);
     },(error : any) => {
       console.log(error);
     });
+  }
+  async getFiles()
+  {
+    var result = await this._uploadService.GetFiles();
+    result.subscribe((data :any)=>{
+      this.items = data.result;
+      console.log(data.result);
+    },(error:any) => {
+      console.log(error);
+    })
   }
 }

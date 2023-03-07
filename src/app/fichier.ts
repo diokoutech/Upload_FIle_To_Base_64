@@ -1,5 +1,6 @@
 export interface Fichier {
     Name: string;
     FileType: string;
-    FileContent ?: string | ArrayBuffer;
+    FileContent ?: string;
+    Content ?: string | ArrayBuffer;
 }
